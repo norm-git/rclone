@@ -1228,6 +1228,28 @@ func NewFs(ctx context.Context, name, path string, m configmap.Mapper) (fs.Fs, e
 		return nil, err
 	}
 
+	// Mod: confirm the object ID is file
+	if isFileID {
+		file, err := f.svc.Files.Get(opt.RootFolderID).Fields("name", "id", "size", "mimeType").SupportsAllDrives(true).Do()
+		if err == nil {
+			//fmt.Println("file.MimeType", file.MimeType)
+			if "application/vnd.google-apps.folder" != file.MimeType && file.MimeType != "" {
+				tempF := *f
+				newRoot := ""
+				tempF.dirCache = dircache.New(newRoot, f.rootFolderID, &tempF)
+				tempF.root = newRoot
+				f.dirCache = tempF.dirCache
+				f.root = tempF.root
+
+				extension, exportName, exportMimeType, isDocument := f.findExportFormat(file)
+				obj, _ := f.newObjectWithExportInfo(file.Name, file, extension, exportName, exportMimeType, isDocument)
+				f.root = "isFile:" + file.Name
+				f.FileObj = &obj
+				return f, fs.ErrorIsFile
+			}
+		}
+	}
+
 	// Find the current root
 	err = f.dirCache.FindRoot(ctx, false)
 	if err != nil {
