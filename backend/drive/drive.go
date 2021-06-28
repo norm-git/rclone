@@ -1451,6 +1451,11 @@ func (f *Fs) newObjectWithExportInfo(
 // NewObject finds the Object at remote.  If it can't be found
 // it returns the error fs.ErrorObjectNotFound.
 func (f *Fs) NewObject(ctx context.Context, remote string) (fs.Object, error) {
+	// DriveMod
+	if f.FileObj != nil {
+		return *f.FileObj, nil
+	}
+
 	info, extension, exportName, exportMimeType, isDocument, err := f.getRemoteInfoWithExport(ctx, remote)
 	if err != nil {
 		return nil, err
@@ -2927,6 +2932,9 @@ func (f *Fs) changeServiceAccountFile(ctx context.Context, file string) (err err
 	if err != nil {
 		return errors.Wrap(err, "drive: failed when making oauth client")
 	}
+
+	f.pacer = newPacer(&f.opt)
+
 	f.client = oAuthClient
 	f.svc, err = drive.New(f.client)
 	if err != nil {
