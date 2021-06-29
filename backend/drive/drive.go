@@ -1228,9 +1228,9 @@ func NewFs(ctx context.Context, name, path string, m configmap.Mapper) (fs.Fs, e
 		return nil, err
 	}
 
-	// Mod: confirm the object ID is file
-	if isFileID {
-		file, err := f.svc.Files.Get(opt.RootFolderID).Fields("name", "id", "size", "mimeType").SupportsAllDrives(true).Do()
+	// DriveMod: confirm the object ID is file
+	if len(f.rootFolderID) == 33 || len(f.rootFolderID) == 28 {
+		file, err := f.svc.Files.Get(f.rootFolderID).Fields("name", "id", "size", "mimeType").SupportsAllDrives(true).Do()
 		if err == nil {
 			//fmt.Println("file.MimeType", file.MimeType)
 			if "application/vnd.google-apps.folder" != file.MimeType && file.MimeType != "" {
