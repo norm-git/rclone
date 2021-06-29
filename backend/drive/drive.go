@@ -1094,8 +1094,8 @@ func newFs(ctx context.Context, name, path string, m configmap.Mapper) (*Fs, err
 	opt := new(Options)
 	err := configstruct.Set(m, opt)
 
-	// Mod: parse object id from path remote:{ID}
-	isFileID := false
+	// DriveMod: parse object id from path remote:{ID}
+	// isFileID := false
 	if path != "" && path[0:1] == "{" && strings.Contains(path, "}") {
 		idIndex := strings.Index(path, "}")
 		if idIndex > 0 {
@@ -1107,7 +1107,7 @@ func newFs(ctx context.Context, name, path string, m configmap.Mapper) (*Fs, err
 				fs.Debugf(nil, "Root ID detected: %s", rootID)
 				//opt.ServerSideAcrossConfigs = true
 				if len(rootID) == 33 || len(rootID) == 28 {
-					isFileID = true
+					// isFileID = true
 					opt.RootFolderID = rootID
 				} else {
 					opt.RootFolderID = rootID
@@ -1451,11 +1451,6 @@ func (f *Fs) newObjectWithExportInfo(
 // NewObject finds the Object at remote.  If it can't be found
 // it returns the error fs.ErrorObjectNotFound.
 func (f *Fs) NewObject(ctx context.Context, remote string) (fs.Object, error) {
-	// DriveMod
-	if f.FileObj != nil {
-		return *f.FileObj, nil
-	}
-
 	info, extension, exportName, exportMimeType, isDocument, err := f.getRemoteInfoWithExport(ctx, remote)
 	if err != nil {
 		return nil, err
@@ -2932,9 +2927,6 @@ func (f *Fs) changeServiceAccountFile(ctx context.Context, file string) (err err
 	if err != nil {
 		return errors.Wrap(err, "drive: failed when making oauth client")
 	}
-
-	f.pacer = newPacer(&f.opt)
-
 	f.client = oAuthClient
 	f.svc, err = drive.New(f.client)
 	if err != nil {
